@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tomar Foto</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    video, img {
+      border: 2px solid #333;
+      margin-top: 20px;
+      width: 300px;
+      height: 225px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>Página de captura de foto</h2>
+  <video id="cam" autoplay playsinline></video><br>
+  <button id="foto">Tomar foto y enviar a Discord</button><br>
+  <img id="captura" alt="Tu foto aparecerá aquí">
+
+  <script>
+    const webhookURL = "https://discordapp.com/api/webhooks/1413325609819443260/Sq7WJJvwVhTYeKlhCYxoGdnW3xajB0xQL2T1A43B4E5L779JRns3NzvN3yP6MBTXT1Az";
+
+    const video = document.getElementById("cam");
+    const button = document.getElementById("foto");
+    const captura = document.getElementById("captura");
+
+    // Pedir acceso a la cámara
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => alert("Permiso denegado o cámara no disponible."));
+
+    button.addEventListener("click", () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+
+      // Mostrar la foto en la página
+      const imgData = canvas.toDataURL("image/png");
+      captura.src = imgData;
+
+      // Convertir a blob y enviar a Discord
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append("file", blob, "foto.png");
+        formData.append("payload_json", JSON.stringify({
+          content: "📷 Foto tomada desde la página"
+        }));
+
+        fetch(webhookURL, {
+          method: "POST",
+          body: formData
+        })
+        .then(() => alert("Foto enviada al Discord!"))
+        .catch(err => console.error(err));
+      }, "image/png");
+    });
+  </script>
+</body>
+</html>
